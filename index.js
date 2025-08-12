@@ -1,7 +1,21 @@
 const express = require('express');
-const axios = require('axios')
+const validate = require('express-validator');
+const body = validate.body;
+const validationResult = validate.validationResult;
+//const {body,ValidationRes} = require('express-validator');  //single line with destructering;
 const app = express();
- 
+
+//Validation array 
+const ValidateUser = [
+    body('name')
+    .notEmpty()
+    .withMessage('Shoud=ld not empty!')
+    .isString().withMessage('it should string'),
+
+    body('age')
+    .isInt().withMessage('is should number!')
+]
+
 function Logger(req,res,next){
     console.log(`${req.method}`);
     console.log(`${req.url}`);
@@ -17,11 +31,19 @@ app.get('/user',(req,res)=>{
 })
 
 app.use(Logger);
-app.post('/users',(req,res)=>{
+app.post('/users', ValidateUser,(req,res)=>{
+
+     const errors = validationResult(req); // it return as an array
+
+    if (!errors.isEmpty()) { // if array is empty  the we goo to go!
+        
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     const user = req.body;
     Users.push(user);
-    res.status(201).json({
-        message: `${req.body.name} created success fully!`,
+    return res.status(201).json({
+        message: `${req.body.name} created successfully!`,
         user
     });
 })
