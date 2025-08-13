@@ -2,9 +2,27 @@ const express = require('express');
 const validate = require('express-validator');
 const body = validate.body;
 const validationResult = validate.validationResult;
+
+const usermodel = require('./mongo')
 //const {body,ValidationRes} = require('express-validator');  //single line with destructering;
 const app = express();
 
+
+const mongoose = require('mongoose');
+const { error } = require('console');
+
+//Database connection!
+mongoose.connect('mongodb+srv://Mahi:9390392440@learning-cluster.qfo520q.mongodb.net/User',
+    {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    tls: true, // force TLS
+    tlsAllowInvalidCertificates: false
+  }
+)
+.then(()=>{console.log('Connected!')})
+.catch
+((err)=>{console.log(err)});
 //Validation array 
 const ValidateUser = [
     body('name')
@@ -24,7 +42,7 @@ function Logger(req,res,next){
 
 app.use(express.json());
 let Users = [{ name: "Mahi", age: 24 },
-  { name: "John", age: 30 }];
+  { name: "John", age:30 }];
 app.use(Logger);
 app.get('/user',(req,res)=>{
     res.status(200).json(Users);
@@ -47,6 +65,30 @@ app.post('/users', ValidateUser,(req,res)=>{
         user
     });
 })
+
+app.post('/dbusers',async(req,res)=>{
+    try{
+        const user = await usermodel.create(req.body);
+        return res.status(201).json({
+            message:'User created!',
+            user
+        })
+    } catch(err){
+         res.status(401).json({error:err.message});
+    }
+})
+
+app.get('/dbusers',async(req,res)=>{
+    try{
+
+        const user = await usermodel.find({});
+         return res.status(200).json({data:user})
+
+    }catch(err){
+        return res.status(404).json({message:'Users not found!'})
+    }
+})
+
 
 app.delete('/user/:name',(req,res)=>{
     const name = req.params.name;
